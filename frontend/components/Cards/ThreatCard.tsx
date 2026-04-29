@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function ThreatCard() {
   return (
     <div className="bg-[#1C1C1C] rounded-xl border-l-4 border-l-[#FFC107] border-y border-r border-border p-6 shadow-2xl relative overflow-hidden group">
@@ -49,9 +51,9 @@ export default function ThreatCard() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="bg-accent-yellow text-black px-6 py-2 rounded text-xs font-black uppercase tracking-wider hover:bg-accent-yellow/90 transition-colors shadow-[0_0_15px_rgba(255,184,0,0.2)]">
+          <Link href="/threat" className="inline-block bg-accent-yellow text-black px-6 py-2 rounded text-xs font-black uppercase tracking-wider hover:bg-accent-yellow/90 transition-colors shadow-[0_0_15px_rgba(255,184,0,0.2)]">
             Review Threat
-          </button>
+          </Link>
           <button className="text-xs font-bold text-foreground/50 hover:text-foreground transition-colors uppercase tracking-wider">
             Dismiss
           </button>
