@@ -1,22 +1,16 @@
-# Sentinel
+# Sentinel Risk Intelligence
 
 > **Your business has blind spots. Sentinel watches all of them so you don't have to.**
 
-Sentinel is a multi-agent business risk intelligence system that continuously monitors vendor/supplier risk signals, regulatory/compliance changes, and internal knowledge health. 
+Sentinel is an autonomous, multi-agent business risk intelligence platform that continuously monitors vendor/supplier risk signals, regulatory/compliance changes, and internal knowledge health. 
 
-*(Built with Google ADK, Gemini 2.5 Flash, FastAPI, and Next.js for the VateCon Build Sprint.)*
-
----
-
-## 📸 Overview
-
-*(Add screenshot or GIF here after the first working demo)*
+*(Built with Google ADK, Gemini 2.5 Flash on Vertex AI, FastAPI, and Next.js for the VateCon Build Sprint.)*
 
 ---
 
 ## 🏗️ Architecture
 
-Sentinel uses a **Manager Agent** to orchestrate three specialized sub-agents in parallel. Output is streamed token-by-token to the frontend via SSE.
+Sentinel uses a highly resilient, hybrid-streaming architecture. It orchestrates three specialized sub-agents in parallel, streaming intelligence token-by-token to the frontend via SSE.
 
 ```ascii
 User Input (Vendors, Industry, Drive URL)
@@ -25,7 +19,7 @@ User Input (Vendors, Industry, Drive URL)
    [ FastAPI Backend ] ── POST /analyze (SSE Stream)
           │
           ▼
-  [ Manager Agent ] (Google ADK)
+  [ Orchestrator ] (Google ADK)
     /     │     \
    /      │      \
   ▼       ▼       ▼
@@ -33,32 +27,32 @@ Vendor  Regul.   Knowledge
 Agent   Agent    Health Agent
   │       │       │
   ▼       ▼       ▼
-[Brave] [Brave]  [Drive MCP]
-(Web)   (Web)    (Local/GCP)
+[Tavily] [Tavily] [Drive MCP]
+(Web)    (Web)    (Local/GCP)
 ```
 
 ---
 
 ## 🔍 Core Capabilities
 
-Sentinel is built around three specialized sub-agents that run asynchronously in parallel, orchestrated by a central Manager Agent:
+Sentinel is built around three specialized modules that provide cross-domain intelligence:
 
 ### 1. Vendor Risk Intelligence
 Monitors the stability and security posture of your third-party ecosystem. The agent queries real-time web sources to identify:
-- Sudden engineering attrition or mass layoffs indicating internal chaos.
-- Unpatched CVE exposures or recent cyber incidents affecting your supply chain.
-- Negative market signals or leadership shakeups.
+- Sudden engineering attrition or mass layoffs.
+- Unpatched CVE exposures or supply chain cyber incidents.
+- Operational disruptions (e.g., Warehouse strikes).
 
 ### 2. Regulatory & Compliance Radar
 Watches for shifting legal frameworks across specific industries and jurisdictions. The agent tracks:
-- Impending compliance deadlines (e.g., EU AI Act, DORA).
+- Impending compliance deadlines and operational mandates.
 - Changes to privacy and data residency laws.
 - Industry-specific mandates that could threaten existing product workflows or require immediate engineering pivots.
 
 ### 3. Knowledge Health Auditing
-Uses the Model Context Protocol (MCP) to securely connect to your internal Google Drive. The agent acts as an internal auditor to prevent "Context Rot" by identifying:
-- Stale, outdated Standard Operating Procedures (SOPs) that no longer match reality.
-- Missing critical policies (e.g., Incident Response, Vendor Offboarding).
+Connects directly to your internal Google Drive and Notion workspaces. The agent acts as an internal auditor, cross-referencing external threats with internal vulnerabilities:
+- Stale, outdated policies that expose the company to new legal liabilities.
+- Security hygiene risks, such as over-provisioned employee access logs.
 - Structural integrity issues within the team's internal documentation repository.
 
 ---
@@ -68,12 +62,13 @@ Uses the Model Context Protocol (MCP) to securely connect to your internal Googl
 Before running the project locally, ensure you have:
 - **Python 3.11+**
 - **Node 18+**
-- **pnpm** (for the frontend package management)
+- **pnpm** (for frontend package management)
+- **Google Cloud Platform (GCP) Account** with Vertex AI API enabled.
 
-### Required API Keys
-- **Brave Search API Key:** Get it free at [search.brave.com/api](https://brave.com/search/api/) (2000 req/month free tier).
-- **Gemini API Key:** Get it from [Google AI Studio](https://aistudio.google.com/app/apikey).
-- **Google Drive MCP Token:** OAuth token required for the Drive MCP connection.
+### Required Integrations
+- **Tavily Search API Key:** Required for real-time live-web grounding.
+- **Google Cloud Auth:** Required for Vertex AI inference.
+- **Google Drive MCP Token:** OAuth token required for the Drive connection.
 
 ---
 
@@ -88,7 +83,7 @@ cd backend
 python -m venv .venv
 
 # Windows
-.venv\Scripts\activate
+.\.venv\Scripts\activate
 # Mac/Linux
 source .venv/bin/activate
 
@@ -99,12 +94,12 @@ Set up your environment variables:
 ```bash
 cp .env.example .env
 ```
-Edit `.env` and insert your API keys:
+Edit `.env` and insert your credentials:
 ```env
-BRAVE_API_KEY=your_brave_search_api_key
+TAVILY_API_KEY=your_tavily_search_api_key
 GOOGLE_DRIVE_MCP_URL=https://drivemcp.googleapis.com/mcp/v1
-GOOGLE_DRIVE_MCP_TOKEN=your_oauth_token
-GEMINI_API_KEY=your_gemini_api_key
+GOOGLE_CLOUD_PROJECT=your_gcp_project_id
+GOOGLE_CLOUD_LOCATION=us-central1
 ```
 
 Run the API:
@@ -126,13 +121,10 @@ Visit `http://localhost:3000` in your browser.
 
 ---
 
-## 🧪 Example Demo Inputs
+## 🧪 Running the Demo
 
-To see the power of Sentinel, try running an analysis with the following real-world parameters from the **Network Search** page:
+To see the power of Sentinel's cross-domain intelligence, try running the specific scenarios below from the Dashboard:
 
-- **Vendors to Monitor:** `AWS`, `Stripe`, `Twilio`
-- **Industry:** `Fintech`
-- **Region:** `EU`
-- **Google Drive URL:** *(Paste a link to a folder containing outdated SOPs or missing policies)*
-
-Watch as the agents scrape the open web for live signals and audit your internal knowledge base in parallel.
+1. **Vendor Risk:** Input `FedEx`, Industry `Logistics`. Watch it identify an impending high-severity warehouse strike.
+2. **Regulatory Radar:** Set Region to `India`, Industry `Logistics`. Watch it uncover the new Delhi 25% EV Transition Mandate.
+3. **Knowledge Health:** Connect your Google Drive containing the sample documents (`Fleet_Management_Plan_2025.pdf`, `Vendor_Risk_Policy_v2.docx`, `Employee_Onboarding_Access_Log.xlsx`). Watch Sentinel connect the dots—realizing your internal Fleet Plan is completely unprepared for the external Delhi EV mandate it just found.
