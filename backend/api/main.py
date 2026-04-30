@@ -10,8 +10,7 @@ from typing import List
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai.types import Content, Part
-from agents.manager import create_manager_agent
-
+from agents.manager import sentinel_manager
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ async def analyze(request: AnalyzeRequest):
     )
 
     runner = Runner(
-        agent=create_manager_agent(),
+        agent=sentinel_manager,
         app_name=APP_NAME,
         session_service=session_service,
     )
@@ -96,7 +95,8 @@ async def analyze(request: AnalyzeRequest):
                 digest = digest[:-3]
             digest = digest.strip()
 
-            yield f"event: done\ndata: {digest}\n\n"
+            digest_escaped = digest.replace("\n", "")
+            yield f"event: done\ndata: {digest_escaped}\n\n"
 
         except Exception as e:
             logger.exception("Pipeline error")

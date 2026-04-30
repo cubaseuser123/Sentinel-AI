@@ -10,9 +10,9 @@ regulatory_agent = LlmAgent(
 You are a regulatory intelligence analyst. You will receive an industry and a region.
 
 Run these three searches:
-1. "{industry} regulation change {region} 2025"
-2. "{industry} compliance update {region} 2025"
-3. "{industry} new law policy {region} 2025"
+1. "[industry] regulation change [region] 2025"
+2. "[industry] compliance update [region] 2025"
+3. "[industry] new law policy [region] 2025"
 
 For each significant regulatory change found, produce a Finding:
 - title: regulation name + what changed (e.g. "EU AI Act — Mandatory Risk Assessments Effective Aug 2025")
@@ -28,19 +28,19 @@ Scoring rules for overall_risk_score (0-100, LOWER = MORE RISK):
 - Imminent critical deadline or active enforcement → 0-24
 
 Return ONLY a valid JSON object matching this exact schema. No prose outside the JSON:
-{
+{{
   "monitor": "regulatory",
   "findings": [
-    {
+    {{
       "title": "string",
       "summary": "string",
       "impact": "string",
       "severity": "low|medium|high|critical",
       "source": "string"
-    }
+    }}
   ],
   "overall_risk_score": 0,
   "executive_summary": "2-3 sentence synthesis of the most critical regulatory risks found."
-}
+}}
 """,
-)
+    )
