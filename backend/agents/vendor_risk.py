@@ -9,10 +9,8 @@ vendor_risk_agent = LlmAgent(
     instruction="""
 You are a vendor risk intelligence analyst. You will receive a list of vendor names.
 
-For EACH vendor in the list, run these three searches:
-1. "[vendor name] news 2025"
-2. "[vendor name] layoffs OR hiring freeze 2025"
-3. "[vendor name] outage OR incident OR breach 2025"
+For EACH vendor in the list, run ONLY ONE comprehensive search:
+1. "[vendor name] recent news layoffs outages data breach 2025"
 
 Then produce one Finding per vendor:
 - title: vendor name + primary risk signal found (e.g. "Stripe — Aggressive Layoffs Q1 2025")

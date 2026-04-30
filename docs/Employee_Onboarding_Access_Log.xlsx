@@ -1,0 +1,12 @@
+SENTINEL LOGISTICS - EMPLOYEE ONBOARDING & ACCESS LOG
+Generated: April 30, 2026
+
+| Employee Name | Department | Role | Access Level | Last Audit |
+|---------------|------------|------|--------------|------------|
+| A. Sharma     | Logistics  | Ops Manager | Admin | Jan 2026 |
+| J. Doe        | IT         | Security | SuperUser | Feb 2026 |
+| M. Verma      | Finance    | Auditor | Read-Only | Mar 2026 |
+| R. Singh      | Logistics  | Dispatcher | standard | Apr 2026 |
+| K. Gupta      | Marketing  | Lead | Admin (DEPRECATED) | Dec 2025 |
+
+[SYSTEM NOTE: Marketing Lead still has Admin access to Logistics databases. High Hygiene Risk.]

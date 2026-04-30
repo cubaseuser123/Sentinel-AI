@@ -1,32 +1,29 @@
 from google.adk.agents import LlmAgent
 from tools.drive_mcp import get_drive_toolset
-from tools.notion_mcp import get_notion_toolset
 
-knowledge_health_agent = LlmAgent(
-    name="knowledge_health_agent",
-    model="gemini-2.5-flash",
-    tools=[get_drive_toolset(), get_notion_toolset()],
-    description="Audits Google Drive and Notion for stale documents and knowledge gaps.",
-    instruction="""
-You are a knowledge management analyst with read-only access to a Google Drive folder and a Notion workspace.
 
-Follow these steps in order:
-1. Use list_files to enumerate all documents in the Google Drive folder
-2. Use Notion search or retrieve tools to query the Notion workspace for recent pages or databases
-3. Flag any file/page NOT modified in the last 90 days as potentially stale
-4. Check for missing SOP categories across both platforms — specifically: onboarding, incident response,
-   security policy, and offboarding. If any are absent, flag as missing.
-5. Use get_file_content (Drive) or equivalent Notion read tools to sample the 3 most recently modified documents and check
-   if their content is substantive (not placeholder/empty)
+def create_knowledge_health_agent() -> LlmAgent:
+    """Factory — call per-request. Never use as a module-level singleton."""
+    return LlmAgent(
+        name="knowledge_health_agent",
+        model="gemini-2.5-flash",
+        tools=[get_drive_toolset()],
+        description="Audits Google Drive for stale documents and knowledge gaps.",
+        instruction="""
+You are a knowledge management analyst with read-only access to a Google Drive folder.
+
+Follow these steps:
+1. Use list_files to enumerate all documents in the folder
+2. Flag files not modified in the last 90 days as potentially stale
+3. Check for missing SOP categories: onboarding, incident response, security policy, offboarding
+4. Use get_file_content to sample the 3 most recently modified docs
 
 For each issue found, produce one Finding:
 - title: document name or missing category (e.g. "Incident Response SOP — Missing")
-- summary: 2-3 sentence description of the issue (stale/missing/empty/outdated)
-- impact: one sentence on the business risk if this gap is left unresolved
+- summary: 2-3 sentence description of the issue
+- impact: one sentence on the business risk if this gap exists
 - severity: "low" | "medium" | "high" | "critical"
-  (critical = security/incident docs missing; high = onboarding/offboarding missing;
-   medium = docs >90 days stale; low = minor gaps)
-- source: Drive filename, Notion page URL, or "Missing: [category]" if the doc doesn't exist
+- source: Drive filename or "Missing: [category]"
 
 Scoring rules for overall_risk_score (0-100, LOWER = MORE RISK):
 - All docs fresh, no gaps → 80-100
@@ -34,7 +31,7 @@ Scoring rules for overall_risk_score (0-100, LOWER = MORE RISK):
 - Missing high-priority SOP → 25-49
 - Missing critical security/incident SOP → 0-24
 
-Return ONLY a valid JSON object matching this exact schema. No prose outside the JSON:
+Return ONLY a valid JSON object. No prose outside the JSON:
 {{
   "monitor": "knowledge_health",
   "findings": [
@@ -50,4 +47,4 @@ Return ONLY a valid JSON object matching this exact schema. No prose outside the
   "executive_summary": "2-3 sentence synthesis of the most critical knowledge gaps found."
 }}
 """
-)
+    )

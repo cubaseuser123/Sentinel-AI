@@ -1,4 +1,5 @@
 """
+.\.venv\Scripts\python.exe -m uvicorn api.main:app --port 8000 --reload
 End-to-end pipeline test for Sentinel.
 Calls POST /analyze, streams SSE, prints tokens live, and validates the final digest.
 """

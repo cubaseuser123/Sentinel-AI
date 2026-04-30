@@ -10,15 +10,17 @@ from typing import List
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai.types import Content, Part
-from agents.manager import sentinel_manager
+from agents.vendor_risk import vendor_risk_agent
+from agents.regulatory import regulatory_agent
+from agents.knowledge_health import create_knowledge_health_agent
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Sentinel API", version="1.0.0")
-
+app = FastAPI(title="Sentinel API", version="2.0.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,10 +29,17 @@ app.add_middleware(
 APP_NAME = "sentinel"
 
 
-class AnalyzeRequest(BaseModel):
+class VendorRequest(BaseModel):
     vendors: List[str]
     industry: str
+
+
+class RegulatoryRequest(BaseModel):
+    industry: str
     region: str
+
+
+class KnowledgeRequest(BaseModel):
     drive_folder_url: str
 
 
@@ -39,65 +48,33 @@ async def health():
     return {"status": "ok"}
 
 
-@app.post("/analyze")
-async def analyze(request: AnalyzeRequest):
-    """Run the Sentinel multi-agent pipeline and stream output as SSE."""
-
+async def _stream_agent(agent, message_text: str) -> StreamingResponse:
     session_service = InMemorySessionService()
     session = await session_service.create_session(
-        app_name=APP_NAME,
-        user_id="sentinel_user",
-        session_id=str(uuid.uuid4()),
+        app_name=APP_NAME, user_id="sentinel_user", session_id=str(uuid.uuid4())
     )
-
-    runner = Runner(
-        agent=sentinel_manager,
-        app_name=APP_NAME,
-        session_service=session_service,
-    )
-
-    user_message = Content(
-        role="user",
-        parts=[
-            Part(
-                text=f"vendors: {request.vendors}\n"
-                     f"industry: {request.industry}\n"
-                     f"region: {request.region}\n"
-                     f"drive_folder_url: {request.drive_folder_url}"
-            )
-        ],
-    )
+    runner = Runner(agent=agent, app_name=APP_NAME, session_service=session_service)
+    user_message = Content(role="user", parts=[Part(text=message_text)])
 
     async def event_generator():
         full_text = ""
         try:
             async for event in runner.run_async(
-                user_id="sentinel_user",
-                session_id=session.id,
-                new_message=user_message,
+                user_id="sentinel_user", session_id=session.id, new_message=user_message
             ):
-                # Stream partial text tokens as they arrive
                 if event.content and event.content.parts:
                     for part in event.content.parts:
                         if hasattr(part, "text") and part.text:
                             full_text += part.text
-                            # Escape newlines so SSE doesn't break
-                            safe = part.text.replace("\n", "\\n")
-                            yield f"data: {safe}\n\n"
+                            yield f"data: {part.text.replace(chr(10), chr(92)+'n')}\n\n"
 
-            # On completion, strip markdown fences and emit 'done'
             digest = full_text.strip()
-            if digest.startswith("```json"):
-                digest = digest[7:]
-            if digest.startswith("```"):
-                digest = digest[3:]
+            for fence in ["```json", "```"]:
+                if digest.startswith(fence):
+                    digest = digest[len(fence):]
             if digest.endswith("```"):
                 digest = digest[:-3]
-            digest = digest.strip()
-
-            digest_escaped = digest.replace("\n", "")
-            yield f"event: done\ndata: {digest_escaped}\n\n"
-
+            yield f"event: done\ndata: {digest.strip().replace(chr(10), '')}\n\n"
         except Exception as e:
             logger.exception("Pipeline error")
             yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
@@ -105,8 +82,27 @@ async def analyze(request: AnalyzeRequest):
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-        },
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.post("/analyze/vendor")
+async def analyze_vendor(request: VendorRequest):
+    return await _stream_agent(
+        vendor_risk_agent,
+        f"vendors: {request.vendors}\nindustry: {request.industry}"
+    )
+
+
+@app.post("/analyze/regulatory")
+async def analyze_regulatory(request: RegulatoryRequest):
+    return await _stream_agent(
+        regulatory_agent,
+        f"industry: {request.industry}\nregion: {request.region}"
+    )
+
+
+@app.post("/analyze/knowledge")
+async def analyze_knowledge(request: KnowledgeRequest):
+    agent = create_knowledge_health_agent()
+    return await _stream_agent(agent, f"drive_folder_url: {request.drive_folder_url}")

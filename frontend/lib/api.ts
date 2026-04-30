@@ -1,19 +1,18 @@
-import { AnalyzeRequest, SentinelDigest } from "./types";
+import { VendorRequest, RegulatoryRequest, KnowledgeRequest, MonitorResult } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
 export type StreamEvent =
   | { type: "token"; data: string }
-  | { type: "done"; digest: SentinelDigest }
+  | { type: "done"; result: MonitorResult }
   | { type: "error"; error: string };
 
-export async function* streamAnalysis(
-  request: AnalyzeRequest
-): AsyncGenerator<StreamEvent> {
-  const response = await fetch(`${API_BASE}/analyze`, {
+async function* streamEndpoint(endpoint: string, body: object, signal?: AbortSignal): AsyncGenerator<StreamEvent> {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(request),
+    body: JSON.stringify(body),
+    signal,
   });
 
   if (!response.ok || !response.body) {
@@ -29,7 +28,6 @@ export async function* streamAnalysis(
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split("\n");
     buffer = lines.pop() ?? "";
@@ -39,25 +37,15 @@ export async function* streamAnalysis(
         lastEvent = line.slice(7).trim();
       } else if (line.startsWith("data: ")) {
         const data = line.slice(6);
-
         if (lastEvent === "done") {
-          try {
-            const digest = JSON.parse(data) as SentinelDigest;
-            yield { type: "done", digest };
-          } catch {
-            yield { type: "error", error: "Failed to parse digest" };
-          }
+          try { yield { type: "done", result: JSON.parse(data) as MonitorResult }; }
+          catch { yield { type: "error", error: "Failed to parse result" }; }
           lastEvent = "";
         } else if (lastEvent === "error") {
-          try {
-            const { error } = JSON.parse(data);
-            yield { type: "error", error };
-          } catch {
-            yield { type: "error", error: data };
-          }
+          try { yield { type: "error", error: JSON.parse(data).error }; }
+          catch { yield { type: "error", error: data }; }
           lastEvent = "";
         } else {
-          // regular token
           yield { type: "token", data: data.replace(/\\n/g, "\n") };
         }
       } else if (line === "") {
@@ -66,3 +54,12 @@ export async function* streamAnalysis(
     }
   }
 }
+
+export const streamVendorAnalysis = (req: VendorRequest, signal?: AbortSignal) =>
+  streamEndpoint("/analyze/vendor", req, signal);
+
+export const streamRegulatoryAnalysis = (req: RegulatoryRequest, signal?: AbortSignal) =>
+  streamEndpoint("/analyze/regulatory", req, signal);
+
+export const streamKnowledgeAnalysis = (req: KnowledgeRequest, signal?: AbortSignal) =>
+  streamEndpoint("/analyze/knowledge", req, signal);

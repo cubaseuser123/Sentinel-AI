@@ -8,9 +8,9 @@ export default function TopNav() {
   const pathname = usePathname();
 
   const navLinks = [
-    { name: "Global Intel", href: "/intel" },
+    { name: "Global Intel", href: "/" },
     { name: "Knowledge Health", href: "/knowledge" },
-    { name: "Systems", href: "/systems" },
+    { name: "Systems", href: "/" },
   ];
 
   return (

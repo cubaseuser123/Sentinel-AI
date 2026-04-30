@@ -9,10 +9,8 @@ regulatory_agent = LlmAgent(
     instruction="""
 You are a regulatory intelligence analyst. You will receive an industry and a region.
 
-Run these three searches:
-1. "[industry] regulation change [region] 2025"
-2. "[industry] compliance update [region] 2025"
-3. "[industry] new law policy [region] 2025"
+Run ONLY ONE comprehensive search:
+1. "[industry] regulatory compliance changes new laws [region] 2025"
 
 For each significant regulatory change found, produce a Finding:
 - title: regulation name + what changed (e.g. "EU AI Act — Mandatory Risk Assessments Effective Aug 2025")

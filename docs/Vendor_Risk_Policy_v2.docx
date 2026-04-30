@@ -1,0 +1,16 @@
+# SENTINEL RISK INTELLIGENCE - VENDOR RISK POLICY
+Version: 2.1 (Last Updated: October 2022)
+
+## 1. Vendor Onboarding
+All new vendors must undergo a Tier 1 security assessment including:
+- Data encryption standards (AES-256)
+- SOC2 Type II compliance check
+- Financial stability audit
+
+## 2. Annual Reviews
+Vendors with access to PII (Personally Identifiable Information) are subject to annual reviews every October.
+
+## 3. Termination Policy
+Termination of service requires 30-day notice and evidence of data destruction.
+
+[SYSTEM NOTE: This policy is outdated. It does not include the Rajasthan Platform Based Gig Workers Act (2023) or the Digital Personal Data Protection Act (2023) requirements.]
